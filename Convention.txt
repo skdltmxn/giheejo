@@ -21,6 +21,15 @@ G.IHee.Jo Coding Convention
     ex) if(1) (x) -> if (1) (o)
 	for(i = 0; i < 10; i++) (x) -> for (i = 0; i < 10; i++) (o)
 	while(1) (x) -> while (1) (o)
+	do
+	{
+	    ...
+	}while(1); (x)
+
+	do
+	{
+	    ...
+	} while (1); (o)
 
 (4) 함수 호출시 괄호는 띄어쓰기를 하지 않는다.
     ex) func (param1, param2); (x) -> func(param1, param2); (o)
@@ -28,11 +37,21 @@ G.IHee.Jo Coding Convention
 (5) 중괄호는 다음 줄에 쓴다.
     ex) if (a == 10) {
 	    b -= 5;
+	    c <<= 2;
+	} else {
+	    b += 5;
+	    c <<= 3;
 	}  (x)
 
 	if (a == 10)
 	{
 	    b -= 5;
+	    c <<= 2;
+	}
+	else
+	{
+	    b += 5;
+	    c <<= 3;
 	}  (o)
 
 	int func(int a, char b) {
@@ -44,12 +63,32 @@ G.IHee.Jo Coding Convention
 	    ...
 	}  (o)
 
+	switch (a) {
+	case 1:
+	    return 1;
+	case 2:
+	    return 2;
+	}  (x)
+
+	switch (a)
+	{
+	case 1:
+	    return 1;
+	case 2:
+	    return 2;
+	}  (o)
+
+
 (6) 포인터 선언시 *는 변수명에 붙인다.
     ex) char* a; / char * a; (x) -> char *a; (o)
 
 (7) 괄호 안의 시작과 끝엔 띄어쓰기를 하지 않는다.
     ex) func( "param" ); (x) -> func("param"); (o)
         if ( i > 10 ) (x) -> if (i > 10) (o)
+
+(8) 상수를 정의할 때는 대문자로 정의한다. 단, 상수 변수는 소문자로 쓴다.
+    ex) #define pi 3.14 (x) -> #define PI 3.14 (o)
+        const float PI = 3.14; (x) -> const float pi = 3.14; (o)
 
 2. Naming
 
@@ -70,5 +109,36 @@ Naming에는 절대적인 기준이 없기 때문에 다음 사항을 참고하여 적절히 판단하도록 한
 	int number_of_total_section_in_executable;
     와 같은 이름은 오히려 가독성을 해칠 위험이 있다.
 
+    주의할 점은, 임시적인 용도로 쓰이는 경우(대표적으로 for문의 i와 같은 변수)에는
+    이름에 의미를 부여하는 것이 오히려 비효율적일 수 있다는 것이다.
+    loop를 위한 변수에 i 대신 loop_counter 식의 이름을 붙이는 것은 그다지
+    의미가 없다.
+
 (2) 두 단어 이상으로 이루어진 이름의 각 단어는 '_'으로 연결한다.
     ex) int add_new_section(...) /* 새로운 section을 추가하는 함수 */
+
+3. 코드 디자인 원칙
+
+다음은 전반적인 코드의 디자인에 관련된 사항이다.
+
+(1) 하나의 함수는 하나의 기능만을 제공하는 것을 원칙으로 한다.
+    또한, 그 내용은 가독성을 해치지 않는 범위에서 되도록 간단하도록 구성하도록 한다.
+    만일 함수의 내용이 복잡하고 길어질 것 같다면 helper functions를 정의하여
+    내용을 분산하는 것이 좋다.
+
+(2) 어떤 변수나 함수가 그 소스 파일에서만 사용되는 것이라면 static으로 선언한다.
+    만약 어떤 변수 int some_var와 함수 void some_func()가 a.c 에서만
+    사용된다면, static int some_var, static void some_func() 로 선언한다.
+    
+    개발에 있어서 전역 변수나 전역 함수는 최대한 사용을 하지 않도록 하며, 성능상의 이유 등으로
+    꼭 필요한 경우 논의를 거쳐 사용하도록 한다. (여기서 전역이란 프로그램 전체에서 사용되는 경우이다.)
+
+(3) 주석은 코드에 대한 설명이 필요하다고 판단되는 경우에만 간략히 쓰도록 한다.
+    코드의 라인마다 주석을 다는 것은 전혀 도움이 되지 않는 일이며, 주석은 항상
+    /* ... */ 형식으로 달도록 한다. ('// 주석 내용'의 형태는 쓰지 않는다.)
+    만약 주석의 내용을 여러 줄에 걸쳐 써야한다면 다음과 같은 형식을 지키도록 한다.
+
+    /*
+     * 만일 주석의 내용이 길어 한 줄을 넘어서 써야한다면
+     * 이런 형식을 지켜서 쓰도록 한다.
+     */    
