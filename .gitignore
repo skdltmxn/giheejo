@@ -20,7 +20,6 @@
 *.opensdf
 *.sdf
 *.suo
-*.filters
 *.user
 
 # Unnecessary outputs
