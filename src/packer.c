@@ -16,17 +16,24 @@ int pack_file(config_t *conf)
 {
 	struct file_info input_file;
 	struct packer_info packer;
+	int pack_result;
 
-	if (!file_open(conf->input_filename, "rb", &input_file))
+	input_file.fp = fopen(conf->input_filename, "rb");
+	if (!input_file.fp)
 	{
 		printf("[-] Input file %s not found\n", conf->input_filename);
 		return 0;
 	}
 
 #if defined(_WIN32) || defined(_WIN64)
-	pe_pack(&input_file, &packer);
+	pack_result = pe_pack(&input_file, &packer);
 #endif
 
-	file_close(&input_file);
+	if (!pack_result)
+	{
+		printf("[-] Error occurred %d\n", packer.err);
+	}
+
+	fclose(input_file.fp);
 	return 1;
 }

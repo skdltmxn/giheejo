@@ -12,6 +12,13 @@ typedef struct image_file_header
 	uint16	characteristic;
 } IMAGE_FILE_HEADER;
 
+struct pe_format
+{
+	IMAGE_FILE_HEADER img_hdr;
+};
+
+#define DOS_STUB_SIZE	0x40
+
 /* 
 	There are more types actually,
 	but out targets are x86 (maybe x64 too in the future...)
