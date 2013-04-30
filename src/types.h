@@ -31,4 +31,10 @@ typedef int		bool;
 #define inline	__inline__
 #endif
 
+/* multi-platform support */
+
+#if defined(_WIN32) || defined(_WIN64)
+#define	GIJ_WIN
+#endif
+
 #endif
