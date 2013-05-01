@@ -4,7 +4,7 @@
 #include "config.h"
 #include "file.h"
 
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef GIJ_WIN
 #include "win/pe_packer.h"
 #endif
 

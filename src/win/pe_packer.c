@@ -3,7 +3,6 @@
 #include "../types.h"
 #include "../file.h"
 #include "../packer_info.h"
-#include "../packer_error.h"
 #include "pe_packer.h"
 #include "pe.h"
 
@@ -105,6 +104,36 @@ static int pe_image_opt_header(struct file_info *in, struct packer_info *pi)
 	return 1;
 }
 
+int pe_image_section_header(struct file_info *in, struct packer_info *pi)
+{
+	struct pe_format *pf = (struct pe_format *)in->file_format;
+	size_t read;
+	int i;
+
+	read = fread(pf->section_hdr, 
+		sizeof(IMAGE_SECTION_HEADER), 
+		pf->img_hdr.nr_sections, 
+		in->fp);
+
+	if (read != pf->img_hdr.nr_sections)
+	{
+		packer_set_error(pi, PACKER_INVALID_FORMAT);
+		return 0;
+	}
+
+	for (i = 0; i < pf->img_hdr.nr_sections; ++i)
+	{
+		uint32 section_base = pf->opt_hdr.image_base + pf->section_hdr[i].virtual_addr;
+
+		printf("Section #%d: %s\n", i + 1, pf->section_hdr[i].section_name);
+		printf("from %08x to %08x\n", 
+			section_base,
+			section_base + pf->section_hdr[i].virtual_size - 1);
+	}
+
+	return 1;
+}
+
 int pe_pack(struct file_info *in, struct packer_info *pi)
 {
 	FILE *fp = in->fp;
@@ -147,6 +176,14 @@ int pe_pack(struct file_info *in, struct packer_info *pi)
 		packer_set_error(pi, PACKER_NO_MEMORY);
 		return 0;
 	}
+
+	/* read section headers */
+	if (!pe_image_section_header(in, pi))
+		return 0;
+
+	/* read IAT */
+	if (!pe_iat(in, pi))
+		return 0;
 
 	return 1;
 }

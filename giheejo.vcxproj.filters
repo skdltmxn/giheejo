@@ -33,6 +33,12 @@
     <ClCompile Include="src\win\pe_packer.c">
       <Filter>Source Files\win</Filter>
     </ClCompile>
+    <ClCompile Include="src\win\iat.c">
+      <Filter>Source Files\win</Filter>
+    </ClCompile>
+    <ClCompile Include="src\win\section.c">
+      <Filter>Source Files\win</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\types.h">
