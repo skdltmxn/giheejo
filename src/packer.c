@@ -3,6 +3,9 @@
 #include "packer_info.h"
 #include "config.h"
 #include "file.h"
+#include "./lzo/lzoconf.h"
+#include "./lzo/lzodefs.h"
+#include "./lzo/lzo1x.h"
 
 #if defined(_WIN32) || defined(_WIN64)
 #include "win/pe_packer.h"
