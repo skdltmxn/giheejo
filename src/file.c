@@ -2,16 +2,16 @@
 #include "types.h"
 #include "file.h"
 
-uint32 file_size(struct file_info *oi)
+uint32 file_size(struct file_info *fi)
 {
 	long pos;
-	if (!oi->fp)
+	if (!fi->fp)
 		return 0;
 
-	pos = ftell(oi->fp);
-	fseek(oi->fp, 0, SEEK_END);
-	oi->file_size = ftell(oi->fp);
-	fseek(oi->fp, pos, SEEK_SET);
+	pos = ftell(fi->fp);
+	fseek(fi->fp, 0, SEEK_END);
+	fi->file_size = ftell(fi->fp);
+	fseek(fi->fp, pos, SEEK_SET);
 
-	return oi->file_size;
+	return fi->file_size;
 }

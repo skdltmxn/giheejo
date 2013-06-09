@@ -72,7 +72,9 @@
     <ClCompile Include="src\file.c" />
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\packer.c" />
+    <ClCompile Include="src\win\iat.c" />
     <ClCompile Include="src\win\pe_packer.c" />
+    <ClCompile Include="src\win\section.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\config.h" />

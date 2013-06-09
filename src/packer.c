@@ -7,7 +7,7 @@
 #include "./lzo/lzodefs.h"
 #include "./lzo/lzo1x.h"
 
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef GIJ_WIN
 #include "win/pe_packer.h"
 #endif
 
