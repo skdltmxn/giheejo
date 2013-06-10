@@ -22,6 +22,9 @@
     <Filter Include="Header Files\lzo">
       <UniqueIdentifier>{faa051f3-488c-4616-a039-087c161d8d35}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\lzo">
+      <UniqueIdentifier>{ccc94ef6-224d-47b7-8038-b7a74739b43e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.c">
@@ -41,6 +44,12 @@
     </ClCompile>
     <ClCompile Include="src\win\section.c">
       <Filter>Source Files\win</Filter>
+    </ClCompile>
+    <ClCompile Include="src\compressor.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lzo\lzo1x_9x.c">
+      <Filter>Source Files\lzo</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -68,14 +77,43 @@
     <ClInclude Include="src\packer_error.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\lzo\lzo1x.h">
-      <Filter>Header Files\lzo</Filter>
-    </ClInclude>
     <ClInclude Include="src\lzo\lzoconf.h">
       <Filter>Header Files\lzo</Filter>
     </ClInclude>
     <ClInclude Include="src\lzo\lzodefs.h">
       <Filter>Header Files\lzo</Filter>
     </ClInclude>
+    <ClInclude Include="src\lzo\lzo_conf.h">
+      <Filter>Header Files\lzo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\lzo\miniacc.h">
+      <Filter>Header Files\lzo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\lzo\lzo_ptr.h">
+      <Filter>Header Files\lzo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\lzo\config1x.h">
+      <Filter>Header Files\lzo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\lzo\lzo_dict.h">
+      <Filter>Header Files\lzo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\compressor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\lzo\lzo1x.h">
+      <Filter>Header Files\lzo</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\lzo\lzo_func.ch">
+      <Filter>Source Files\lzo</Filter>
+    </None>
+    <None Include="src\lzo\lzo_mchw.ch">
+      <Filter>Source Files\lzo</Filter>
+    </None>
+    <None Include="src\lzo\lzo_swd.ch">
+      <Filter>Source Files\lzo</Filter>
+    </None>
   </ItemGroup>
 </Project>

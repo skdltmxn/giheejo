@@ -62,6 +62,15 @@ typedef struct image_optional_header
 	IMAGE_DATA_DIRECTORY data_dir[16];
 } IMAGE_OPTIONAL_HEADER;
 
+#define SECTION_CODE		0x20
+#define SECTION_INIT_DATA	0x40
+#define SECTION_UNINIT_DATA	0x80
+
+#define SECTION_SHARED		0x10000000
+#define SECTION_EXEC		0x20000000
+#define SECTION_READ		0x40000000
+#define SECTION_WRITE		0x80000000
+
 typedef struct image_section_header
 {
 	char	section_name[8];

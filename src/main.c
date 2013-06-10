@@ -35,6 +35,6 @@ int main(int argc, char **argv)
 		return 1;
 
 	pack_file(&conf);
-	
+
 	return 0;
 }

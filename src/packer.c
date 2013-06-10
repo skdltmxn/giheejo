@@ -32,7 +32,7 @@ int pack_file(config_t *conf)
 
 #ifdef GIJ_WIN
 	/* Windows PE format */
-	pack_result = pe_pack(&input_file, &packer);
+	pack_result = pe_pack(&input_file, &packer, conf);
 #endif
 
 	if (!pack_result)

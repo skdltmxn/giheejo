@@ -69,7 +69,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\compressor.c" />
     <ClCompile Include="src\file.c" />
+    <ClCompile Include="src\lzo\lzo1x_9x.c" />
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\packer.c" />
     <ClCompile Include="src\win\iat.c" />
@@ -77,17 +79,28 @@
     <ClCompile Include="src\win\section.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\compressor.h" />
     <ClInclude Include="src\config.h" />
     <ClInclude Include="src\file.h" />
+    <ClInclude Include="src\lzo\config1x.h" />
     <ClInclude Include="src\lzo\lzo1x.h" />
     <ClInclude Include="src\lzo\lzoconf.h" />
     <ClInclude Include="src\lzo\lzodefs.h" />
+    <ClInclude Include="src\lzo\lzo_conf.h" />
+    <ClInclude Include="src\lzo\lzo_dict.h" />
+    <ClInclude Include="src\lzo\lzo_ptr.h" />
+    <ClInclude Include="src\lzo\miniacc.h" />
     <ClInclude Include="src\packer.h" />
     <ClInclude Include="src\packer_error.h" />
     <ClInclude Include="src\packer_info.h" />
     <ClInclude Include="src\types.h" />
     <ClInclude Include="src\win\pe.h" />
     <ClInclude Include="src\win\pe_packer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\lzo\lzo_func.ch" />
+    <None Include="src\lzo\lzo_mchw.ch" />
+    <None Include="src\lzo\lzo_swd.ch" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
