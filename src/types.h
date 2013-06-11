@@ -24,6 +24,9 @@ typedef int		bool;
 #define NULL 0
 #endif
 
+/* Commonly used simple functions */
+#define abs(x)	((x) > 0 ? (x) : -(x))
+
 /* inline keyword */
 #if defined(_MSC_VER)
 #define inline	__inline

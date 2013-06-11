@@ -6,6 +6,7 @@
 #include "../config.h"
 #include "../packer_info.h"
 #include "../compressor.h"
+#include "../buffer.h"
 #include "pe_packer.h"
 #include "pe.h"
 
@@ -143,7 +144,8 @@ int pe_pack(struct file_info *in, struct packer_info *pi, config_t *conf)
 	uint32 filesize = file_size(in);
 	uint32 pe_offset;
 	struct pe_format *pf, *opf;
-	byte *out_buf = NULL;
+	struct buffer out_buf;
+	byte *section_buffer = NULL;
 	byte *comp_buf = NULL;
 	int i, src_len = 0;
 	uint32 dst_len;
@@ -179,15 +181,12 @@ int pe_pack(struct file_info *in, struct packer_info *pi, config_t *conf)
 	if (!pe_image_opt_header(in, pi))
 		return 0;
 
-	out_buf = (byte *)malloc(pf->opt_hdr.image_size);
-	if (!out_buf)
+	if (!init_buffer(&out_buf, pf->opt_hdr.image_size))
 	{
 		packer_set_error(pi, PACKER_NO_MEMORY);
 		return 0;
 	}
 
-	memset(out_buf, 0, pf->opt_hdr.image_size);
-	
 	pf->section_hdr = (IMAGE_SECTION_HEADER *)malloc(
 		sizeof(IMAGE_SECTION_HEADER) * pf->img_hdr.nr_sections);
 	if (!pf->section_hdr)
@@ -199,6 +198,13 @@ int pe_pack(struct file_info *in, struct packer_info *pi, config_t *conf)
 	/* read section headers */
 	if (!pe_image_section_header(in, pi))
 		return 0;
+
+	section_buffer = (byte *)malloc(pf->opt_hdr.image_size);
+	if (!section_buffer)
+	{
+		packer_set_error(pi, PACKER_NO_MEMORY);
+		return 0;
+	}
 
 	for (i = 0; i < pf->img_hdr.nr_sections; ++i)
 	{
@@ -212,7 +218,7 @@ int pe_pack(struct file_info *in, struct packer_info *pi, config_t *conf)
 		}
 
 		fseek(in->fp, section->raw_pointer, SEEK_SET);
-		fread(out_buf + section->virtual_addr - pf->opt_hdr.code_base,
+		fread(section_buffer + section->virtual_addr - pf->opt_hdr.code_base,
 			1,
 			section->raw_size,
 			in->fp);
@@ -220,8 +226,16 @@ int pe_pack(struct file_info *in, struct packer_info *pi, config_t *conf)
 		src_len += section->raw_size;
 	}
 
+	if (!add_buffer(&out_buf, section_buffer, src_len))
+	{
+		packer_set_error(pi, PACKER_NO_MEMORY);
+		return 0;
+	}
+	
+	free(section_buffer);
+
 	/* read IAT */
-	if (!pe_iat(in, pi))
+	if (!pe_iat(in, pi, &out_buf))
 		return 0;
 
 	comp_buf = (byte *)malloc(src_len);
@@ -231,7 +245,7 @@ int pe_pack(struct file_info *in, struct packer_info *pi, config_t *conf)
 		return 0;
 	}
 
-	if (compress(out_buf, src_len, comp_buf, &dst_len))
+	if (compress(out_buf.p, src_len, comp_buf, &dst_len))
 	{
 		packer_set_error(pi, PACKER_COMPRESS_FAILED);
 		return 0;
@@ -243,6 +257,7 @@ int pe_pack(struct file_info *in, struct packer_info *pi, config_t *conf)
 		TODO: Modify headers
 			  Construct IAT for packed executable
 	*/
+
 
 	out.fp = fopen(conf->output_filename, "wb");
 	if (!out.fp)
@@ -266,8 +281,9 @@ int pe_pack(struct file_info *in, struct packer_info *pi, config_t *conf)
 
 	/* reuse buffer */
 	fseek(in->fp, 0, SEEK_SET);
-	fread(out_buf, 1, pe_offset, in->fp);
-	fwrite(comp_buf, 1, dst_len, out.fp);
+	//fread(out_buf.p, 1, pe_offset, in->fp);
+	//fwrite(comp_buf, 1, dst_len, out.fp);
+	fwrite(out_buf.p, 1, out_buf.pos, out.fp);
 
 	opf->img_hdr.nr_sections = has_rsrc ? 3 : 2;
 	opf->opt_hdr.file_align = 0x200;
@@ -278,8 +294,7 @@ int pe_pack(struct file_info *in, struct packer_info *pi, config_t *conf)
 	if (comp_buf)
 		free(comp_buf);
 
-	if (out_buf)
-		free(out_buf);
+	destroy_buffer(&out_buf);
 	return 1;
 }
 

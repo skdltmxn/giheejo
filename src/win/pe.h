@@ -146,6 +146,9 @@ enum
 #define RVA2RAW(rva, file_base, section_base) \
 	((file_base) + (rva) - (section_base))
 
+#define RAW2RVA(raw, file_base, section_base) \
+	((section_base) + (raw) - (file_base))
+
 extern IMAGE_SECTION_HEADER *get_containing_section(struct pe_format *pf,
 													uint32 rva);
 
