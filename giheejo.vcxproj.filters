@@ -51,6 +51,9 @@
     <ClCompile Include="src\lzo\lzo1x_9x.c">
       <Filter>Source Files\lzo</Filter>
     </ClCompile>
+    <ClCompile Include="src\buffer.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\types.h">
@@ -103,6 +106,9 @@
     </ClInclude>
     <ClInclude Include="src\lzo\lzo1x.h">
       <Filter>Header Files\lzo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\buffer.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

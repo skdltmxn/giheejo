@@ -69,6 +69,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\buffer.c" />
     <ClCompile Include="src\compressor.c" />
     <ClCompile Include="src\file.c" />
     <ClCompile Include="src\lzo\lzo1x_9x.c" />
@@ -79,6 +80,7 @@
     <ClCompile Include="src\win\section.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\buffer.h" />
     <ClInclude Include="src\compressor.h" />
     <ClInclude Include="src\config.h" />
     <ClInclude Include="src\file.h" />
