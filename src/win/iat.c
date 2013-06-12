@@ -5,6 +5,7 @@
 #include "../buffer.h"
 #include "pe.h"
 #include "../packer_info.h"
+#include "win32_stub.h"
 
 static const char *kernel32 = "KERNEL32.DLL";
 static const char *k32_funcs[] = {
@@ -42,8 +43,6 @@ int pe_iat(struct file_info *in, struct packer_info *pi, struct buffer *out_buf,
 	iid_ptr = RVA2RAW(pf->opt_hdr.data_dir[DIR_IMPORT].rva, 
 		section->raw_pointer,
 		section->virtual_addr);
-
-	printf("Image Import Desc. is located at file offset %08x\n", iid_ptr);
 
 	if (fseek(in->fp, iid_ptr, SEEK_SET))
 	{
@@ -122,9 +121,11 @@ int pe_iat(struct file_info *in, struct packer_info *pi, struct buffer *out_buf,
 		++iid_iter;
 	} /* foreach IID */
 
+	i = 0;
+	add_buffer(out_buf, &i, 4);
 	round_up_buffer(out_buf, 4);
 	base = out_buf->pos;
-	i = 0;
+	
 
 	/* start over for pass 2 */
 	iid_iter = iid;
@@ -143,14 +144,23 @@ int pe_iat(struct file_info *in, struct packer_info *pi, struct buffer *out_buf,
 		/* KERNEL32.dll */
 		if (!stricmp(dll_name, kernel32))
 		{
+			uint32 temp = iat_base;
 			iat_value = func_base;
 
 			/* IAT */
 			add_buffer_at(fake_iat, &iat_value, 4, iat_base);
+			memcpy(&win32_stub[59], &temp, 4);
+			temp += 4;
 			iat_value += 14;
+
 			add_buffer_at(fake_iat, &iat_value, 4, iat_base + 4);
+			memcpy(&win32_stub[80], &temp, 4);
+			temp += 4;
 			iat_value += 16;
+
 			add_buffer_at(fake_iat, &iat_value, 4, iat_base + 8);
+			memcpy(&win32_stub[97], &temp, 4);
+
 			add_buffer_at(fake_iat, &zero, 4, iat_base + 12);
 
 			/* function names */
