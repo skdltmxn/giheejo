@@ -9,6 +9,9 @@
 #include "../buffer.h"
 #include "pe_packer.h"
 #include "pe.h"
+#include "win32_stub.h"
+
+#define ALIGN(x, n)	((x) + ((n) - ((x) % (n) ? ((x) % (n)) : (n))))
 
 static uint32 pe_dos_stub(struct file_info *in, struct packer_info *pi)
 {
@@ -145,12 +148,14 @@ int pe_pack(struct file_info *in, struct packer_info *pi, config_t *conf)
 	uint32 pe_offset;
 	struct pe_format *pf, *opf;
 	struct buffer out_buf;
+	struct buffer fake_iat;
 	byte *section_buffer = NULL;
 	byte *comp_buf = NULL;
 	int i, src_len = 0;
-	uint32 dst_len;
+	uint32 dst_len, section_len = 0;
 	struct file_info out;
 	int has_rsrc = 0;
+	IMAGE_SECTION_HEADER *rsrc_section = NULL;
 
 	/* skip dos stub */
 	pe_offset = pe_dos_stub(in, pi);
@@ -233,9 +238,12 @@ int pe_pack(struct file_info *in, struct packer_info *pi, config_t *conf)
 	}
 	
 	free(section_buffer);
+	section_len = out_buf.pos;
 
 	/* read IAT */
-	if (!pe_iat(in, pi, &out_buf))
+	init_buffer(&fake_iat, 1024);
+	src_len = pe_iat(in, pi, &out_buf, &fake_iat);
+	if (!src_len)
 		return 0;
 
 	comp_buf = (byte *)malloc(src_len);
@@ -245,6 +253,7 @@ int pe_pack(struct file_info *in, struct packer_info *pi, config_t *conf)
 		return 0;
 	}
 
+	/* compress sections + original IAT */
 	if (compress(out_buf.p, src_len, comp_buf, &dst_len))
 	{
 		packer_set_error(pi, PACKER_COMPRESS_FAILED);
@@ -276,21 +285,97 @@ int pe_pack(struct file_info *in, struct packer_info *pi, config_t *conf)
 	memset(opf, 0, sizeof(struct pe_format));
 	out.file_format = opf;
 
-	memcpy(&opf->img_hdr, &pf->img_hdr, sizeof(IMAGE_FILE_HEADER));
-	memcpy(&opf->opt_hdr, &pf->opt_hdr, sizeof(IMAGE_OPTIONAL_HEADER));
+	memcpy(&opf->img_hdr, &pf->img_hdr, sizeof(pf->img_hdr));
+	memcpy(&opf->opt_hdr, &pf->opt_hdr, sizeof(pf->opt_hdr));
+
+	/* construct new section headers */
+	opf->img_hdr.nr_sections = 3;
+	opf->section_hdr = (IMAGE_SECTION_HEADER *)malloc(
+		sizeof(IMAGE_SECTION_HEADER) * opf->img_hdr.nr_sections);
+	memset(opf->section_hdr, 0, sizeof(IMAGE_SECTION_HEADER) * opf->img_hdr.nr_sections);
+
+	if (!opf->section_hdr)
+	{
+		packer_set_error(pi, PACKER_NO_MEMORY);
+		return 0;
+	}
+	strcpy(opf->section_hdr[0].section_name, "HEE");
+	strcpy(opf->section_hdr[1].section_name, "JO");
+	strcpy(opf->section_hdr[2].section_name, ".rsrc");
+
+	rsrc_section = find_section(pf, ".rsrc");
+
+	opf->section_hdr[0].raw_size = 0;
+	opf->section_hdr[1].raw_size = ALIGN(fake_iat.pos + dst_len + sizeof(win32_stub), 0x200);
+	opf->section_hdr[2].raw_size = rsrc_section->raw_size;
+	opf->section_hdr[1].virtual_size = ALIGN(opf->section_hdr[1].raw_size, 0x1000);
+
+	opf->section_hdr[0].raw_pointer = 0x400;
+	opf->section_hdr[1].raw_pointer = 0x400;
+	opf->section_hdr[2].raw_pointer = opf->section_hdr[1].raw_pointer + opf->section_hdr[1].raw_size;
+
+	opf->section_hdr[0].virtual_addr = pf->opt_hdr.code_base;
+	opf->section_hdr[1].virtual_addr = ALIGN(opf->section_hdr[1].raw_size, 0x1000);
+	opf->section_hdr[2].virtual_addr = opf->section_hdr[1].virtual_addr + opf->section_hdr[1].virtual_size;
+
+	opf->section_hdr[0].virtual_size = opf->section_hdr[1].virtual_addr - opf->section_hdr[0].virtual_addr;
+	
+	opf->section_hdr[2].virtual_size = ALIGN(opf->section_hdr[2].raw_size, 0x1000);
+
+	opf->section_hdr[0].characteristics = (SECTION_UNINIT_DATA | SECTION_WRITE | SECTION_READ | SECTION_EXEC);
+	opf->section_hdr[1].characteristics = (SECTION_INIT_DATA | SECTION_WRITE | SECTION_READ | SECTION_EXEC);
+	opf->section_hdr[2].characteristics = (SECTION_UNINIT_DATA | SECTION_WRITE | SECTION_READ);
+
+	opf->opt_hdr.image_size = opf->section_hdr[2].virtual_addr + opf->section_hdr[2].virtual_size;
+	opf->opt_hdr.bss_size = opf->section_hdr[0].virtual_size;
+	opf->opt_hdr.data_size = opf->section_hdr[2].virtual_size;
+	opf->opt_hdr.data_base = opf->section_hdr[2].virtual_addr;
+	opf->opt_hdr.code_size = opf->section_hdr[1].virtual_size;
+	opf->opt_hdr.code_base = opf->section_hdr[1].virtual_addr;
+	opf->opt_hdr.file_align = 0x200;
+
+	opf->opt_hdr.data_dir[DIR_IMPORT].rva = opf->section_hdr[1].virtual_addr + dst_len;
+	opf->opt_hdr.data_dir[DIR_IAT].rva = 0;
+	opf->opt_hdr.data_dir[DIR_IAT].size = 0;
+	opf->opt_hdr.data_dir[DIR_RESOURCE].rva = opf->section_hdr[2].virtual_addr;
+	opf->opt_hdr.data_dir[DIR_RESOURCE].size = opf->section_hdr[2].raw_size;
+	opf->opt_hdr.data_dir[DIR_LOADCONFIG].rva = 0;
+	opf->opt_hdr.data_dir[DIR_LOADCONFIG].size = 0;
+
+	pe_iat2(pi, opf->section_hdr[1].virtual_addr + ALIGN(dst_len, 4), &fake_iat);
+	opf->opt_hdr.entry = opf->section_hdr[1].virtual_addr + ALIGN(dst_len, 4) + fake_iat.pos;
 
 	/* reuse buffer */
 	fseek(in->fp, 0, SEEK_SET);
-	//fread(out_buf.p, 1, pe_offset, in->fp);
-	//fwrite(comp_buf, 1, dst_len, out.fp);
-	fwrite(out_buf.p, 1, out_buf.pos, out.fp);
+	fread(out_buf.p, 1, pe_offset, in->fp);
 
-	opf->img_hdr.nr_sections = has_rsrc ? 3 : 2;
-	opf->opt_hdr.file_align = 0x200;
+	fwrite(out_buf.p, 1, pe_offset, out.fp);
+	fwrite("\x50\x45\x00\x00", 1, 4, out.fp);
 
+	/* headers */
+	fwrite(&opf->img_hdr, 1, sizeof(IMAGE_FILE_HEADER), out.fp);
+	fwrite(&opf->opt_hdr, 1, sizeof(IMAGE_OPTIONAL_HEADER), out.fp);
+	fwrite(opf->section_hdr, sizeof(IMAGE_SECTION_HEADER), opf->img_hdr.nr_sections, out.fp);
+
+	/* compressed data */
+	fseek(out.fp, 0x400, SEEK_SET);
+	fwrite(comp_buf, 1, dst_len, out.fp);
+	fwrite(fake_iat.p, 1, fake_iat.pos, out.fp);
+	fwrite(win32_stub, 1, sizeof(win32_stub), out.fp);
+
+	fseek(out.fp, opf->section_hdr[2].raw_pointer, SEEK_SET);
+	{
+		byte *rsrc_c = (byte *)malloc(rsrc_section->raw_size);
+		fseek(in->fp, rsrc_section->raw_pointer, SEEK_SET);
+		fread(rsrc_c, 1, rsrc_section->raw_size, in->fp);
+		fwrite(rsrc_c, 1, rsrc_section->raw_size, out.fp);
+	}
+
+	
+	/* cleanups */
 	fclose(out.fp);
-
 	pe_destroy(&out);
+
 	if (comp_buf)
 		free(comp_buf);
 

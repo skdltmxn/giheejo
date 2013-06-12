@@ -98,6 +98,7 @@
     <ClInclude Include="src\types.h" />
     <ClInclude Include="src\win\pe.h" />
     <ClInclude Include="src\win\pe_packer.h" />
+    <ClInclude Include="src\win\win32_stub.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\lzo\lzo_func.ch" />

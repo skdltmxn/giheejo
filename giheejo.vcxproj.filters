@@ -110,6 +110,9 @@
     <ClInclude Include="src\buffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\win\win32_stub.h">
+      <Filter>Header Files\win</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\lzo\lzo_func.ch">

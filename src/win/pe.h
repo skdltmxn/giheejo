@@ -151,5 +151,6 @@ enum
 
 extern IMAGE_SECTION_HEADER *get_containing_section(struct pe_format *pf,
 													uint32 rva);
+extern IMAGE_SECTION_HEADER *find_section(struct pe_format *pf, const char *name);
 
 #endif

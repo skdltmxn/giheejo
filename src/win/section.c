@@ -1,3 +1,4 @@
+#include <string.h>
 #include "../types.h"
 #include "../file.h"
 #include "pe.h"
@@ -21,4 +22,17 @@ IMAGE_SECTION_HEADER *get_containing_section(struct pe_format *pf, uint32 rva)
 	}
 
 	return ret;
+}
+
+IMAGE_SECTION_HEADER *find_section(struct pe_format *pf, const char *name)
+{
+	int i;
+
+	for (i = 0; i < pf->img_hdr.nr_sections; ++i)
+	{
+		if (!strcmp(pf->section_hdr[i].section_name, name))
+			return &pf->section_hdr[i];
+	}
+
+	return NULL;
 }
